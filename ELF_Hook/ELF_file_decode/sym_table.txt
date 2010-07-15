@@ -1,0 +1,56 @@
+---------------------------- Symbol table start -------------------------------
+Symbol_index_and_name: 0x00 -> 
+Symbol_value: 0x00
+Symbol_size: 0x00
+Symbol_type_and_binding: 0x00
+Section_index: 0x00
+---------------------------- Symbol table end ---------------------------------
+---------------------------- Symbol table start -------------------------------
+Symbol_index_and_name: 0x72 -> printf
+Symbol_value: 0x00
+Symbol_size: 0xa2
+Symbol_type_and_binding: 0x12
+Section_index: 0x00
+---------------------------- Symbol table end ---------------------------------
+---------------------------- Symbol table start -------------------------------
+Symbol_index_and_name: 0x10 -> __gmon_start__
+Symbol_value: 0x00
+Symbol_size: 0x00
+Symbol_type_and_binding: 0x20
+Section_index: 0x00
+---------------------------- Symbol table end ---------------------------------
+---------------------------- Symbol table start -------------------------------
+Symbol_index_and_name: 0x1f -> _Jv_RegisterClasses
+Symbol_value: 0x00
+Symbol_size: 0x00
+Symbol_type_and_binding: 0x20
+Section_index: 0x00
+---------------------------- Symbol table end ---------------------------------
+---------------------------- Symbol table start -------------------------------
+Symbol_index_and_name: 0x6a -> putchar
+Symbol_value: 0x00
+Symbol_size: 0x106
+Symbol_type_and_binding: 0x12
+Section_index: 0x00
+---------------------------- Symbol table end ---------------------------------
+---------------------------- Symbol table start -------------------------------
+Symbol_index_and_name: 0x7f -> __libc_start_main
+Symbol_value: 0x00
+Symbol_size: 0x1a5
+Symbol_type_and_binding: 0x12
+Section_index: 0x00
+---------------------------- Symbol table end ---------------------------------
+---------------------------- Symbol table start -------------------------------
+Symbol_index_and_name: 0x79 -> sleep
+Symbol_value: 0x400508
+Symbol_size: 0x1b9
+Symbol_type_and_binding: 0x12
+Section_index: 0x00
+---------------------------- Symbol table end ---------------------------------
+---------------------------- Symbol table start -------------------------------
+Symbol_index_and_name: 0x33 -> __gxx_personality_v0
+Symbol_value: 0x400518
+Symbol_size: 0x49e
+Symbol_type_and_binding: 0x12
+Section_index: 0x00
+---------------------------- Symbol table end ---------------------------------
