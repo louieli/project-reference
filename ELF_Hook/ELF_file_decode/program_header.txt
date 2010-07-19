@@ -2,70 +2,80 @@
 (Segment type)p_type: 0x06
 (Segment flags)p_flags: 0x05
 (Segment file offset)p_offset: 0x40
-(Segment virtual address)p_vaddr: 0x400040
-(Segment physical address)p_paddr: 0x400040
-(Segment size in file)p_filesz: 0x1c0
-(Segment size in memory)p_memsz: 0x1c0
+(Segment virtual address)p_vaddr: 0xa5e00040
+(Segment physical address)p_paddr: 0xa5e00040
+(Segment size in file)p_filesz: 0x230
+(Segment size in memory)p_memsz: 0x230
 (Segment alignment)p_align: 0x08
 ---------------------------- Program entry end --------------------------------
 ---------------------------- Program entry start ------------------------------
 (Segment type)p_type: 0x03
 (Segment flags)p_flags: 0x04
-(Segment file offset)p_offset: 0x200
-(Segment virtual address)p_vaddr: 0x400200
-(Segment physical address)p_paddr: 0x400200
+(Segment file offset)p_offset: 0x122370
+(Segment virtual address)p_vaddr: 0xa5f22370
+(Segment physical address)p_paddr: 0xa5f22370
 (Segment size in file)p_filesz: 0x1c
 (Segment size in memory)p_memsz: 0x1c
-(Segment alignment)p_align: 0x01
+(Segment alignment)p_align: 0x10
 ---------------------------- Program entry end --------------------------------
 ---------------------------- Program entry start ------------------------------
 (Segment type)p_type: 0x01
 (Segment flags)p_flags: 0x05
 (Segment file offset)p_offset: 0x00
-(Segment virtual address)p_vaddr: 0x400000
-(Segment physical address)p_paddr: 0x400000
-(Segment size in file)p_filesz: 0x964
-(Segment size in memory)p_memsz: 0x964
+(Segment virtual address)p_vaddr: 0xa5e00000
+(Segment physical address)p_paddr: 0xa5e00000
+(Segment size in file)p_filesz: 0x14b860
+(Segment size in memory)p_memsz: 0x14b860
 (Segment alignment)p_align: 0x200000
 ---------------------------- Program entry end --------------------------------
 ---------------------------- Program entry start ------------------------------
 (Segment type)p_type: 0x01
 (Segment flags)p_flags: 0x06
-(Segment file offset)p_offset: 0x968
-(Segment virtual address)p_vaddr: 0x600968
-(Segment physical address)p_paddr: 0x600968
-(Segment size in file)p_filesz: 0x234
-(Segment size in memory)p_memsz: 0x248
+(Segment file offset)p_offset: 0x14c780
+(Segment virtual address)p_vaddr: 0xa614c780
+(Segment physical address)p_paddr: 0xa614c780
+(Segment size in file)p_filesz: 0x4618
+(Segment size in memory)p_memsz: 0x8998
 (Segment alignment)p_align: 0x200000
 ---------------------------- Program entry end --------------------------------
 ---------------------------- Program entry start ------------------------------
 (Segment type)p_type: 0x02
 (Segment flags)p_flags: 0x06
-(Segment file offset)p_offset: 0x990
-(Segment virtual address)p_vaddr: 0x600990
-(Segment physical address)p_paddr: 0x600990
-(Segment size in file)p_filesz: 0x1c0
-(Segment size in memory)p_memsz: 0x1c0
+(Segment file offset)p_offset: 0x14fb60
+(Segment virtual address)p_vaddr: 0xa614fb60
+(Segment physical address)p_paddr: 0xa614fb60
+(Segment size in file)p_filesz: 0x1f0
+(Segment size in memory)p_memsz: 0x1f0
 (Segment alignment)p_align: 0x08
 ---------------------------- Program entry end --------------------------------
 ---------------------------- Program entry start ------------------------------
 (Segment type)p_type: 0x04
 (Segment flags)p_flags: 0x04
-(Segment file offset)p_offset: 0x21c
-(Segment virtual address)p_vaddr: 0x40021c
-(Segment physical address)p_paddr: 0x40021c
+(Segment file offset)p_offset: 0x270
+(Segment virtual address)p_vaddr: 0xa5e00270
+(Segment physical address)p_paddr: 0xa5e00270
 (Segment size in file)p_filesz: 0x20
 (Segment size in memory)p_memsz: 0x20
 (Segment alignment)p_align: 0x04
 ---------------------------- Program entry end --------------------------------
 ---------------------------- Program entry start ------------------------------
+(Segment type)p_type: 0x07
+(Segment flags)p_flags: 0x04
+(Segment file offset)p_offset: 0x14c780
+(Segment virtual address)p_vaddr: 0xa614c780
+(Segment physical address)p_paddr: 0xa614c780
+(Segment size in file)p_filesz: 0x10
+(Segment size in memory)p_memsz: 0x60
+(Segment alignment)p_align: 0x08
+---------------------------- Program entry end --------------------------------
+---------------------------- Program entry start ------------------------------
 (Segment type)p_type: 0x6474e550
 (Segment flags)p_flags: 0x04
-(Segment file offset)p_offset: 0x854
-(Segment virtual address)p_vaddr: 0x400854
-(Segment physical address)p_paddr: 0x400854
-(Segment size in file)p_filesz: 0x34
-(Segment size in memory)p_memsz: 0x34
+(Segment file offset)p_offset: 0x12238c
+(Segment virtual address)p_vaddr: 0xa5f2238c
+(Segment physical address)p_paddr: 0xa5f2238c
+(Segment size in file)p_filesz: 0x5f14
+(Segment size in memory)p_memsz: 0x5f14
 (Segment alignment)p_align: 0x04
 ---------------------------- Program entry end --------------------------------
 ---------------------------- Program entry start ------------------------------
@@ -77,4 +87,14 @@
 (Segment size in file)p_filesz: 0x00
 (Segment size in memory)p_memsz: 0x00
 (Segment alignment)p_align: 0x08
+---------------------------- Program entry end --------------------------------
+---------------------------- Program entry start ------------------------------
+(Segment type)p_type: 0x6474e552
+(Segment flags)p_flags: 0x04
+(Segment file offset)p_offset: 0x14c780
+(Segment virtual address)p_vaddr: 0xa614c780
+(Segment physical address)p_paddr: 0xa614c780
+(Segment size in file)p_filesz: 0x3880
+(Segment size in memory)p_memsz: 0x3880
+(Segment alignment)p_align: 0x01
 ---------------------------- Program entry end --------------------------------

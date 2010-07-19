@@ -15,7 +15,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	fstream fs;
 
-	fs.open("proc", std::ios::in | std::ios::binary);
+	//fs.open("proc", std::ios::in | std::ios::binary);
+	fs.open("libc-2.5.so", std::ios::in | std::ios::binary);
 
 	if(!fs.is_open())
 	{
@@ -138,12 +139,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	SymNamStrTable = new char[SymNamStrTblSize + 1];
 	fs.read(SymNamStrTable, SymNamStrTblSize);
 	
-	char *p = SymNamStrTable;
-	for(int i = 0;i<SymNamStrTblSize;i++)
-	{
-		printf("%s\n", p+i);
-	}
-
 	fs.seekg(SymTblFileOffset, ios::beg);
 
 	for(int i = 0;i<SymTblNum;i++)

@@ -1,0 +1,69 @@
+; SockHookFun.def : Declares the module parameters for the DLL.
+
+LIBRARY      "SockHookFun"
+DESCRIPTION  'SockHookFun Windows Dynamic Link Library'
+
+EXPORTS
+    ; Explicit exports can go here
+	GetDllInfo
+	ShowMe
+
+	my_accept
+	my_bind
+    my_closesocket
+    my_connect
+    my_ioctlsocket
+	my_getpeername
+    my_getsockname
+    my_getsockopt
+    my_htonl
+    my_htons
+    my_inet_addr
+    my_inet_ntoa
+    my_listen
+    my_ntohl
+    my_ntohs
+    my_recv
+    my_recvfrom
+    my_select
+    my_send
+    my_sendto
+    my_setsockopt
+	my_shutdown
+    my_socket
+    my_gethostbyaddr
+    my_gethostbyname
+	my_gethostname
+	my_getservbyport
+	my_getservbyname
+	my_getprotobynumber
+	my_getprotobyname
+	my_WSAStartup
+	my_WSACleanup
+	my_WSASetLastError
+	my_WSAGetLastError
+	my_WSAIsBlocking
+	my_WSAUnhookBlockingHook
+	my_WSASetBlockingHook
+	my_WSACancelBlockingCall
+	my_WSAAsyncGetServByName
+	my_WSAAsyncGetServByPort
+	my_WSAAsyncGetProtoByName
+	my_WSAAsyncGetProtoByNumber
+	my_WSAAsyncGetHostByName
+	my_WSAAsyncGetHostByAddr
+	my_WSACancelAsyncRequest
+	my_WSAAsyncSelect
+	my_WSARecvEx
+	my_EnumProtocolsA
+	my_EnumProtocolsW
+	my_GetAddressByNameA
+	my_GetAddressByNameW
+	my_GetTypeByNameA
+	my_GetTypeByNameW
+	my_GetNameByTypeA
+	my_GetNameByTypeW
+	my_SetServiceA
+	my_SetServiceW
+	my_GetServiceA
+	my_GetServiceW
