@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ApiHookTest", "ApiHookTest.vcproj", "{C9B0DBE7-0E63-4866-8F10-D38738BF67E3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "HSock", "HSock\HSock.vcproj", "{9CF8E2C1-A43D-41DC-B847-C30C7E59267D}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SockHookFun", "SockHookFun\SockHookFun.vcproj", "{C31B305D-F95F-45EC-8763-28E65B1452C5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C9B0DBE7-0E63-4866-8F10-D38738BF67E3}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C9B0DBE7-0E63-4866-8F10-D38738BF67E3}.Debug|Win32.Build.0 = Debug|Win32
+		{C9B0DBE7-0E63-4866-8F10-D38738BF67E3}.Release|Win32.ActiveCfg = Release|Win32
+		{C9B0DBE7-0E63-4866-8F10-D38738BF67E3}.Release|Win32.Build.0 = Release|Win32
+		{9CF8E2C1-A43D-41DC-B847-C30C7E59267D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9CF8E2C1-A43D-41DC-B847-C30C7E59267D}.Debug|Win32.Build.0 = Debug|Win32
+		{9CF8E2C1-A43D-41DC-B847-C30C7E59267D}.Release|Win32.ActiveCfg = Release|Win32
+		{9CF8E2C1-A43D-41DC-B847-C30C7E59267D}.Release|Win32.Build.0 = Release|Win32
+		{C31B305D-F95F-45EC-8763-28E65B1452C5}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C31B305D-F95F-45EC-8763-28E65B1452C5}.Debug|Win32.Build.0 = Debug|Win32
+		{C31B305D-F95F-45EC-8763-28E65B1452C5}.Release|Win32.ActiveCfg = Release|Win32
+		{C31B305D-F95F-45EC-8763-28E65B1452C5}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

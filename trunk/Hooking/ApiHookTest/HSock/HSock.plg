@@ -1,0 +1,111 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: ApiHookTest - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\yanjun\LOCALS~1\Temp\RSP14.tmp" with contents
+[
+/nologo /MD /W3 /GX /Zd /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Fp"Release/ApiHookTest.pch" /Yu"stdafx.h" /Fo"Release/" /Fd"Release/" /FD /c 
+"D:\MyProject\ApiHookTest\DllInfoDlg.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\yanjun\LOCALS~1\Temp\RSP14.tmp" 
+Creating temporary file "C:\DOCUME~1\yanjun\LOCALS~1\Temp\RSP15.tmp" with contents
+[
+/nologo /subsystem:windows /incremental:no /pdb:"Release/ApiHook.pdb" /debug /machine:I386 /out:"Release/ApiHook.exe" 
+.\Release\ApiHookTest.obj
+.\Release\ApiHookTestDlg.obj
+.\Release\DataEngine.obj
+.\Release\DllInfoDlg.obj
+.\Release\HookProcess.obj
+.\Release\MyStatic.obj
+.\Release\StdAfx.obj
+.\Release\ApiHookTest.res
+]
+Creating command line "link.exe @C:\DOCUME~1\yanjun\LOCALS~1\Temp\RSP15.tmp"
+<h3>Output Window</h3>
+Compiling...
+DllInfoDlg.cpp
+Linking...
+
+
+
+<h3>Results</h3>
+ApiHook.exe - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: ApiHookTest - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\yanjun\LOCALS~1\Temp\RSP17.tmp" with contents
+[
+/nologo /MDd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_AFXDLL" /D "_MBCS" /Fp"Debug/ApiHookTest.pch" /Yu"stdafx.h" /Fo"Debug/" /Fd"Debug/" /FD /GZ /c 
+"D:\MyProject\ApiHookTest\DllInfoDlg.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\yanjun\LOCALS~1\Temp\RSP17.tmp" 
+Creating temporary file "C:\DOCUME~1\yanjun\LOCALS~1\Temp\RSP18.tmp" with contents
+[
+Imagehlp.lib /nologo /base:"0x10480000" /subsystem:windows /incremental:yes /pdb:"Debug/ApiHookTest.pdb" /debug /machine:I386 /out:"Debug/ApiHookTest.exe" /pdbtype:sept 
+.\Debug\ApiHookTest.obj
+.\Debug\ApiHookTestDlg.obj
+.\Debug\DataEngine.obj
+.\Debug\DllInfoDlg.obj
+.\Debug\HookProcess.obj
+.\Debug\MyStatic.obj
+.\Debug\StdAfx.obj
+.\Debug\ApiHookTest.res
+]
+Creating command line "link.exe @C:\DOCUME~1\yanjun\LOCALS~1\Temp\RSP18.tmp"
+<h3>Output Window</h3>
+Compiling...
+DllInfoDlg.cpp
+D:\MyProject\ApiHookTest\DllInfoDlg.cpp(132) : warning C4786: 'std::reverse_iterator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > const *,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::basic_string<char,std::char_traits<char>,std::allocator<char> > const &,std::basic_string<char,std::char_traits<char>,std::allocator<char> > const *,int>' : identifier was truncated to '255' characters in the debug information
+D:\MyProject\ApiHookTest\DllInfoDlg.cpp(132) : warning C4786: 'std::reverse_iterator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::basic_string<char,std::char_traits<char>,std::allocator<char> > &,std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,int>' : identifier was truncated to '255' characters in the debug information
+c:\program files\microsoft visual studio\vc98\include\vector(39) : warning C4786: 'std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >' : identifier was truncated to '255' characters in the debug information
+c:\program files\microsoft visual studio\vc98\include\vector(60) : warning C4786: 'std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >::~vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> >,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > > >' : identifier was truncated to '255' characters in the debug information
+Linking...
+
+
+
+<h3>Results</h3>
+ApiHookTest.exe - 0 error(s), 4 warning(s)
+<h3>
+--------------------Configuration: HSock - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+
+
+
+<h3>Results</h3>
+Hook.dll - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: HSock - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+
+
+
+<h3>Results</h3>
+HSock.dll - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: SockHookFun - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+
+
+
+<h3>Results</h3>
+SockHookFun.dll - 0 error(s), 0 warning(s)
+<h3>
+--------------------Configuration: SockHookFun - Win32 Debug--------------------
+</h3>
+<h3>Command Lines</h3>
+
+
+
+<h3>Results</h3>
+SockHookFun.dll - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

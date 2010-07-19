@@ -1,16 +1,16 @@
 ------------------------------ ELF header start -------------------------------
 (Magic number and other info)e_ident: ELF
-(Object file type)e_type: 0x02
+(Object file type)e_type: 0x03
 (Architecture)e_machine: 0x3e
 (Object file version)e_version: 0x01
-(Entry point virtual address)e_entry: 0x400530
+(Entry point virtual address)e_entry: 0xa5e1da70
 (Program header table file offset)e_phoff: 0x40
-(Section header table file offset)e_shoff: 0xda0
+(Section header table file offset)e_shoff: 0x1a10c8
 (Processor-specific flags)e_flags: 0x00
 (ELF header size in bytes)e_ehsize: 0x40 = 64
 (Program header table entry size)e_phentsize: 0x38 = 56
-(Program header table entry count)e_phnum: 0x08 = 8
+(Program header table entry count)e_phnum: 0x0a = 10
 (Section header table entry size)e_shentsize: 0x40 = 64
-(Section header table entry count)e_shnum: 0x1d = 29
-(Section header string table index)e_shstrndx: 0x1a = 26
+(Section header table entry count)e_shnum: 0x4d = 77
+(Section header string table index)e_shstrndx: 0x4c = 76
 ------------------------------ ELF header end ---------------------------------
