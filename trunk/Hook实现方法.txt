@@ -1,0 +1,163 @@
+详谈HOOK API的技术
+安全中国 www.anqn.com
+更新时间:2006-02-07 00:59:02
+责任编辑:
+热 点：
+
+HOOK API是一个永恒的话题，如果没有HOOK，许多技术将很难实现，也许根本不能实现。
+这里所说的API，是广义上的API，它包括DOS下的中断，WINDOWS里的API、中断服务、IFS和
+NDIS过滤等。比如大家熟悉的即时翻译软件，就是靠HOOK TextOut()或ExtTextOut()这两个
+函数实现的，在操作系统用这两个函数输出文本之前，就把相应的英文替换成中文而达到即
+时翻译；IFS和NDIS过滤也是如此，在读写磁盘和收发数据之前，系统会调用第三方提供的
+回调函数来判断操作是否可以放行，它与普通HOOK不同，它是操作系统允许的，由操作系统
+提供接口来安装回调函数。
+  甚至如果没有HOOK，就没有病毒，因为不管是DOS下的病毒或WINDOWS里的病毒，
+都是靠HOOK系统服务来实现自己的功能的：DOS下的病毒靠HOOK INT 21来感染文件（文件型病毒），靠HOOK INT 13来感染引导扇区（引导型病毒）；WINDOWS下的病毒靠HOOK 系统API（包括RING0层的和RING3层的），或者安装IFS（CIH病毒所用的方法）来感染文件。因此可以说“没有HOOK，就没有今天多姿多彩的软件世界”。
+
+  由于涉及到专利和知识产权，或者是商业机密，微软一直不提倡大家HOOK它的系统API，
+提供IFS和NDIS等其他过滤接口，也是为了适应杀毒软件和防火墙的需要才开放的。所以在
+大多数时候，HOOK API要靠自己的力量来完成。
+
+  HOOK API有一个原则，这个原则就是：被HOOK的API的原有功能不能受到任何影响。就象
+医生救人，如果把病人身体里的病毒杀死了，病人也死了，那么这个“救人”就没有任何意义了。
+如果你HOOK API之后，你的目的达到了，但API的原有功能失效了，这样不是HOOK，而是REPLACE，操作系统的正常功能就会受到影响，甚至会崩溃。
+
+  HOOK API的技术，说起来也不复杂，就是改变程序流程的技术。在CPU的指令里，有几条
+指令可以改变程序的流程：JMP，CALL，INT，RET，RETF，IRET等指令。理论上只要改变API
+入口和出口的任何机器码，都可以HOOK，但是实际实现起来要复杂很多，因为要处理好以下问题：
+1，CPU指令长度问题，在32位系统里，一条JMP/CALL指令的长度是5个字节，因此你只有替换API
+里超过5个字节长度的机器码（或者替换几条指令长度加起来是5字节的指令），否则会影响被更
+改的小于5个字节的机器码后面的数条指令，甚至程序流程会被打乱，产生不可预料的后果；
+2，参数问题，为了访问原API的参数，你要通过EBP或ESP来引用参数，因此你要非常清楚你的HOOK代码里此时的EBP/ESP的值是多少；
+3，时机的问题，有些HOOK必须在API的开头，有些必须在API的尾部，比如HOOK CreateFilaA()，
+如果你在API尾部HOOK API，那么此时你就不能写文件，甚至不能访问文件；HOOK RECV()，
+如果你在API头HOOK，此时还没有收到数据，你就去查看RECV()的接收缓冲区，里面当然没有
+你想要的数据，必须等RECV()正常执行后，在RECV()的尾部HOOK，此时去查看RECV()的缓冲区，
+里面才有想要的数据；
+4，上下文的问题，有些HOOK代码不能执行某些操作，否则会破坏原API的上下文，原API就失效了；
+5，同步问题，在HOOK代码里尽量不使用全局变量，而使用局部变量，这样也是模块化程序的需要；
+6，最后要注意的是，被替换的CPU指令的原有功能一定要在HOOK代码的某个地方模拟实现。
+
+
+下面以ws2_32.dll里的send()为例子来说明如何HOOK这个函数：
+
+Exported fn(): send - Ord:0013h
+地址     机器码             汇编代码
+:71A21AF4 55               push ebp //将被HOOK的机器码（第1种方法）
+:71A21AF5 8BEC             mov ebp, esp //将被HOOK的机器码（第2种方法）
+:71A21AF7 83EC10             sub esp, 00000010
+:71A21AFA 56               push esi
+:71A21AFB 57               push edi
+:71A21AFC 33FF             xor edi, edi
+:71A21AFE 813D1C20A371931CA271   cmp dword ptr [71A3201C], 71A21C93 //将被HOOK的机器码（第4种方法）
+:71A21B08 0F84853D0000         je 71A25893
+:71A21B0E 8D45F8             lea eax, dword ptr [ebp-08]
+:71A21B11 50               push eax
+:71A21B12 E869F7FFFF         call 71A21280
+:71A21B17 3BC7             cmp eax, edi
+:71A21B19 8945FC             mov dword ptr [ebp-04], eax
+:71A21B1C 0F85C4940000         jne 71A2AFE6
+:71A21B22 FF7508             push [ebp+08]
+:71A21B25 E826F7FFFF         call 71A21250
+:71A21B2A 8BF0             mov esi, eax
+:71A21B2C 3BF7             cmp esi, edi
+:71A21B2E 0F84AB940000         je 71A2AFDF
+:71A21B34 8B4510             mov eax, dword ptr [ebp+10]
+:71A21B37 53               push ebx
+:71A21B38 8D4DFC             lea ecx, dword ptr [ebp-04]
+:71A21B3B 51               push ecx
+:71A21B3C FF75F8             push [ebp-08]
+:71A21B3F 8D4D08             lea ecx, dword ptr [ebp+08]
+:71A21B42 57               push edi
+:71A21B43 57               push edi
+:71A21B44 FF7514             push [ebp+14]
+:71A21B47 8945F0             mov dword ptr [ebp-10], eax
+:71A21B4A 8B450C             mov eax, dword ptr [ebp+0C]
+:71A21B4D 51               push ecx
+:71A21B4E 6A01             push 00000001
+:71A21B50 8D4DF0             lea ecx, dword ptr [ebp-10]
+:71A21B53 51               push ecx
+:71A21B54 FF7508             push [ebp+08]
+:71A21B57 8945F4             mov dword ptr [ebp-0C], eax
+:71A21B5A 8B460C             mov eax, dword ptr [esi+0C]
+:71A21B5D FF5064             call [eax+64]
+:71A21B60 8BCE             mov ecx, esi
+:71A21B62 8BD8             mov ebx, eax
+:71A21B64 E8C7F6FFFF         call 71A21230 //将被HOOK的机器码（第3种方法）
+:71A21B69 3BDF             cmp ebx, edi
+:71A21B6B 5B               pop ebx
+:71A21B6C 0F855F940000         jne 71A2AFD1
+:71A21B72 8B4508             mov eax, dword ptr [ebp+08]
+:71A21B75 5F               pop edi
+:71A21B76 5E               pop esi
+:71A21B77 C9               leave
+:71A21B78 C21000             ret 0010
+
+
+下面用4种方法来HOOK这个API：
+
+1，把API入口的第一条指令是PUSH EBP指令（机器码0x55）替换成INT 3（机器码0xcc），
+然后用WINDOWS提供的调试函数来执行自己的代码，这中方法被SOFT ICE等DEBUGER广泛采用，
+它就是通过BPX在相应的地方设一条INT 3指令来下断点的。但是不提倡用这种方法，因为它
+会与WINDOWS或调试工具产生冲突，而汇编代码基本都要调试；
+
+2，把第二条mov ebp,esp指令（机器码8BEC，2字节）替换为INT F0指令（机器码CDF0），
+然后在IDT里设置一个中断门，指向我们的代码。我这里给出一个HOOK代码：
+
+lea ebp,[esp+12] //模拟原指令mov ebp,esp的功能
+pushfd         //保存现场
+pushad         //保存现场
+
+//在这里做你想做的事情
+
+popad         //恢复现场
+popfd         //恢复现场
+iretd         //返回原指令的下一条指令继续执行原函数（71A21AF7地址处）
+
+这种方法很好，但缺点是要在IDT设置一个中断门，也就是要进RING0。
+
+
+3，更改CALL指令的相对地址（CALL分别在71A21B12、71A21B25、71A21B64，但前面2条CALL之前有一个条件
+跳转指令，有可能不被执行到，因此我们要HOOK 71A21B64处的CALL指令）。为什么要找CALL指令下手？
+因为它们都是5字节的指令，而且都是CALL指令，只要保持操作码0xE8不变，改变后面的相对地址就可以转
+到我们的HOOK代码去执行了，在我们的HOOK代码后面再转到目标地址去执行。
+
+假设我们的HOOK代码在71A20400处，那么我们把71A21B64处的CALL指令改为CALL 71A20400（原指令是这样的：CALL 71A21230）
+而71A20400处的HOOK代码是这样的：
+
+71A20400:
+pushad
+
+//在这里做你想做的事情
+
+popad
+jmp 71A21230   //跳转到原CALL指令的目标地址，原指令是这样的：call 71A21230
+
+这种方法隐蔽性很好，但是比较难找这条5字节的CALL指令，计算相对地址也复杂。
+
+4，替换71A21AFE地址上的cmp dword ptr [71A3201C], 71A21C93指令（机器码：813D1C20A371931CA271，10字节）成为
+call 71A20400
+nop
+nop
+nop
+nop
+nop
+（机器码：E8 XX XX XX XX 90 90 90 90 90，10字节）
+
+在71A20400的HOOK代码是：
+pushad
+mov edx,71A3201Ch           //模拟原指令cmp dword ptr [71A3201C], 71A21C93
+cmp dword ptr [edx],71A21C93h   //模拟原指令cmp dword ptr [71A3201C], 71A21C93
+pushfd
+
+//在这里做你想做的事
+
+popfd
+popad
+ret
+这种方法隐蔽性最好，但不是每个API都有这样的指令，要具体情况具体操作。
+
+
+  以上几种方法是常用的方法，值得一提的是很多人都是改API开头的5个字节，但是现在很多杀毒软件用这样的方法
+检查API是否被HOOK，或其他病毒木马在你之后又改了前5个字节，这样就会互相覆盖，最后一个HOOK API的操作才是有效的，
+所以提倡用第3和第4种方法。（作者：MGF 来源：邪恶八进制信息安全团队）

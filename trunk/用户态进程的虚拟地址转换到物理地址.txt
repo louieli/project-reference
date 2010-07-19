@@ -1,0 +1,17 @@
+看linux内存机制好几遍了，总算是对内存机制有了基本的认识。 
+下面就说一个我刚看内存是的一个问题： 
+  
+用户态进程的虚拟地址如何转换成物理地址？ 
+  
+区分一个进程，我们都知道最简单就是进程的pid。我们就从（pid,virtualaddress）来看看如何将一个进程的虚拟地址转换为物理地址phyaddress。 
+  
+首先根据pid我们可以得到这个进程的task_struct，进而通过task_struct得到mm,通过mm得到pgd。 
+好了，现在我们有pgd和virtualaddress. 
+通过pgd和virtualaddress我们可以得到页表pte. 
+  
+有了pte和virtualaddress,我们就可以计算物理地址了 
+phyaddress=(pte_val(pte)&PAGE_MASK)|(virtualladdress&~PAGE_MASK) 
+  
+  
+物理地址既然出来了，访问这个地址的值就比较简单了，只需要将物理地址转换为内核线性地址就行。 
+*phyaddress=*((char *)phyaddress+PAGE_OFFSET) 
