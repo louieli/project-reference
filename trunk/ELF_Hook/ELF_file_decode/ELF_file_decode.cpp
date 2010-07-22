@@ -16,7 +16,8 @@ int _tmain(int argc, _TCHAR* argv[])
 	fstream fs;
 
 	//fs.open("proc", std::ios::in | std::ios::binary);
-	fs.open("libc-2.5.so", std::ios::in | std::ios::binary);
+	//fs.open("libc-2.5.so", std::ios::in | std::ios::binary);
+	fs.open("ld-2.5.so", std::ios::in | std::ios::binary);
 
 	if(!fs.is_open())
 	{
