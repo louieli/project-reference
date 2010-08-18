@@ -1,0 +1,336 @@
+Intel平台下Linux中ELF文件动态链接的加载、解析及实例分析
+文章分类:操作系统
+
+动态链接，一个经常被人提起的话题。但在这方面很少有文章来阐明这个重要的软件运行机制，只有一些关于动态链接库编程的文章。本系列文章就是要从动态链接库源代码的层次来探讨这个问题。
+
+当然从文章的题目就可以看出，intel平台下的linux ELF文件的动态链接。一则是因为这一方面的资料查找比较方便，二则也是这个讨论的意思比其它的动态链接要更为重要（毕竟现在是intel的天下）。当然，有了这么一个例子，其它的平台下的ELF文件的动态链接也就大同小异。你可以在阅读完了本文之后"举一隅，而反三隅"了。
+
+由于这是一个系列的文章，我计划分三部分来写，第一部分主要分析加载，涉及dl_open这个函数的内容，但由于这个函数所包含的内容实在太多。这里主要是它的_dl_map_object与_dl_init这两个部分，因为这里是把动态链接文件通过在ELF文件中的得到信息映射到内存空间中，而 _dl_init中是一个特殊的初始化。这是对面向对象的函数实现的。
+
+第二部分我将分析函数解析与卸载，这里要讲的内容会比较多，但每一个内容都不会多。首先是在前一篇中没有说完的dl_open中的涉及的 _dl_map_object_deps和_dl_relocate_object两个函数内容，因为这些都与函数解析的内容直接相关，所以安排在这里。而下面的函数解析过程_dl_runtime_resolve是在程序运行中的动态解析过程。这里从本质上来讲没有太多的代码，但它的精巧程度却是最多的（正是我这三篇文章的核心之处）。最后是一个dl_close的实现。这里是一个结尾的工作，顺带一下是_dl_signal_cerror，与 _dl_catch_error的错误例外处理。
+
+第三部将给出injectso实例分析与应用，会介绍一个应用了动态链接的实例，并可以在日后的程序调试过程中使用的injectso实例，它不仅可以让我们对前面所说的动态链接原理有一个更感性的认识，而且就这个实例而言，还可以在以后的代码开发过程中来作为一种动态打补丁的工具，甚至有可能，我会在以后的文章中会用这个工具来介绍新的技术。
+
+一、历史问题
+
+关于动态链接，可以说由来已久。如果追溯，最早的思想就在五十年代就有了，那时就想把一些公用的代码放在内存中的一个地方上，在别的地址用call 便是了。到后来又发展到了 loading overlays（就是把在程序运行生命期不同的代码在不同的时间段被加入内存），这是在六十年代的事。但这只能算是"滥觞"时期。接近于我们现在所说的动态链接是在unix操作系统之后，因为从unix的设计结构而言，本身就是分成模块来实现一个复杂的功能的操作系统。但这些还不是现代意义上的动态链接，原因是现代意义上的动态链接要符合两个特点：
+
+1、 动态的加载，就是当这个运行的模块在需要的时候才被映射入运行模块的虚拟内存空间中，如一个模块在运行中要用到mylib.so中的myget函数，而在没有调用mylib.so这个模块中的其它函数之前，是不会把这个模块加载到你的程序中（也就是内存映射），这些内容在内核中实现，用的是页面异常机制（我可能在另一篇文章中提到这个问题）。
+
+2、 动态的解析，就是当要调用的函数被调用的时候，才会去把这个函数在虚拟内存空间的起始地址解析出来，再写到专门在调用模块中的储存地址内，如前面所说的你已经调用了myget，所以mylib.so模块肯定已经被映射到了程序虚拟内存之中，而如果你再调用mylib.so中的myput函数，那它的函数地址就在调用的时候才会被解析出来。
+
+（注：这里用的程序就是一般所说的进程process，而模块既可能是你的程序的二进制代码，也可能是被你的程序所依赖的别的共享链接文件-------同样ELF格式。）
+
+在这两点中很有点像现在的操作系统中对内存的操作，也就是只有当要用到一个内存空间中的时候才会进行虚拟空间映射，而不是过早的把所有的空间映射好，而只有当要从这个内存空间读的时候才分配物理空间。这有点像第一条。而只有当对这个内存空间进行写的时候产生一个COW（copy on write）。这就有点像第二条。
+
+这样的好处就是充分避免不必要的开销。因为任何一个程序在运行的时候，大部分情况下，不可能用到所有的调用函数。
+
+这样的思想方法提出与实现都是在八十年代的sun公司的SunOS的系统上。
+
+关于这一段历史，请你参见资料[1]。
+
+ELF二进制格式文件与现代的动态链接思想大致是在同一时段形成的，它的来源是AT&T公司的最早的unix中的a.out二进行文件格式。Bell labs的工作人员为了使这种在unix的早期主要的文件格式适应当时新的软件与操作系统的要求（如aix,SunOS,HP-UX这样的unix变种，对更广泛的应用程序的扩展要求，对面向对象的支持等等），就发明了ELF文件格式。
+
+我在这里并不详细讨论ELF文件的具体细节，这本来就可以写一篇很长的文章，你可以参看资料[2]来得到关于它的ABI（application binary interface的规范）。但在ELF文件所采用的那种分层的管理方式却不仅在动态链接中起着重要的作用，而且这一思想可以说是我们计算机中的最古老，也是最经典的思想。
+
+对每个ELF文件，都有一个ELF header，在这里的每个header有两个数据成员，就是
+
+Elf32_Off e_phoff;
+Elf32_Off e_shoff;
+它们分别代表了program header 与section header 在ELF文件中的偏移量。Program header 是总纲，而section header 则是第一个小目。
+
+Elf32_Addr sh_addr;
+Elf32_Off sh_offset;
+Sh_addr这个section 在内存中的映射地址（对动态链接库而言，这是一个相对量，它与整个ELF文件被加载的l_addr形成绝对地址）。Sh_offset是这个section header在文件中的偏移量。
+
+用一图来表示就是这样的，它就是用elf header 来管理了整个ELF文件：
+
+ 
+
+
+举个例子，如果要从一个ELF动态链接库文件中，根据已知的函数名称，找到相应的函数起始地址，那么过程是这样的。
+
+先从前面的ELF 的ehdr中找到文件的偏移e_phoff处，在这其中找到为PT_DYNAMIC 的d_tag的phdr，从这个地址开始处找到DT_DYNAMIC的节，最后从其中找到这样一个Elf32_Sym结构，它的st_name所指的字符串与给定的名称相符，就用st_value便是了。
+
+这种的管理模式，可以说很复杂，有时会看起来是繁琐。如找一个function 的起始地址就要从 elf header >> program header >> symbol section >> function address 这样的四个步骤。但这里的根本的原因是我们的计算机是线性寻址的，并且冯*诺依曼提出的计算机体系结构相关，所以在前面说这是一个古老的思想。但同样也是由于这样的一个ELF文件结构，很有利于ELF文件的扩充。我们可以设想，如果有一天，我们的ELF文件为了某种原因，对它进行加密。这时如果要在ELF 文件中保存密钥，这时候可以在ELF文件中开辟一个专门的section encrypt ，这个section 的type 就是ST_ENCRYPT，那不就是可以了吗？这一点就可以看出ELF文件格式设计者当初的苦心了（现在这个真的有这么一个节了）。
+
+二、代码举例
+
+讲了这么多，还没有真正讲到在intel 32平台下linux动态链接库的加载与调用。在一般的情况下，我们所编写的程序是由编译器与ld.so这个动态链接库来完成的。而如果要显式的调用某一个动态链接库中的程序，则下面是一个例子。
+
+
+#include <dlfcn.h>
+#include <stdio.h>
+
+main()
+{
+void *libc;
+void (*printf_call)();
+char* error_text;
+
+if(libc=dlopen("/lib/libc.so.5",RTLD_LAZY))
+{
+   printf_call=dlsym(libc,"printf");
+   (*printf_call)("hello, world\n");
+dlclose(libc);
+return 0;
+}
+error_text= dlerror();
+printf(error_test);
+return -2;
+}
+
+在这里先用dlopen来打开一个动态链接库文件，而这个过程比我们这里看到的内容多的多，我会在下面用很大的篇幅来说明这一点，而它返回的参数是一个指针，确切的说是struct link_map*，而dlsym就是在这个struct link_map* 与函数名称一起决定这个函数在这个进程中的地址，这个过程用术语来说就是函数解析(function resolution)。而最后的dlclose就是释放刚才在dlopen中得到的资源，这个过程与我们在加载的share object file module，内核中的程序是大概相同的，只不过这里是在用户态，而那个是在内核态。从函数的复杂性而言这里还要复杂一些（最后有一点要说明，如果你想编译上面的文件-------文件名如果是test那就不能用一般的gcc -o test test.c ，而应该是gcc -c test test.c -ldl这样才能编译通过，因为不这样编译器会找不到dlopen 与dlsym dlclose这些特别函数的库文件libdl.so.2， -ldl 就是加载它的标志的）。
+
+三、_dl_open加载过程分析
+
+本文以及以后的两篇文章将都以上面的程序所展示的而讲解。也就是以dlopen >> dlsym >> dlclose 的方式 来讲解这个过程，但有几点先要说明： 我在这里所展示的源代码来自glibc 2.3.2版本。但由于原来的代码，从代码的移植与健壮的考虑，而有许多的防止出错，与关于不同平台的代码，在这里大部分是出错处理代码，我把这些的代码都删除。并且只以intel 32平台下的代码为准。还有，在这里的还考虑到了多线程情况下的动态链接库加载，这里也不予以包括在内（因为现在的linux内核中没有对内核线程的支持）。所以你所看到的代码，在尽量保证说明动态链接加载与函数解析的情况作了多数的删减，代码量大概只有原来的四分之一左右，同时最大程度保持了原来代码的风格，突出核心功能。尽管如此，还是有高达2000行以上的代码，请大家耐心的解读。我也会对其中可能的难解之处作出详细的说明。让大家真正体会到代码设计与动态解析的真谛。
+
+第一个函数在dl-open.c中
+
+
+    2672 void* internal_function
+2673 _dl_open (const char *file, int mode, const void *caller)
+2674 {
+2675    struct dl_open_args args;
+2676
+2677      __rtld_lock_lock_recursive (GL(dl_load_lock));
+2678
+2679    args.file = file;
+2680    args.mode = mode;
+2681    args.caller = caller;
+2682    args.map = NULL;
+2683
+2684    dl_open_worker(&args);
+2685       __rtld_lock_unlock_recursive (GL(dl_load_lock));
+2686   
+2687 }
+
+这里的internal_function是表明这个函数从寄存器中传递参数，而它的定义在configure.in中得到的。
+
+# define internal_function __attribute__ ((regparm (3), stdcall))
+
+这其中的regparm就是gcc的编译选项是从寄存器传递3个参数，而stdcall表明这个函数是由调用函数来清栈，而一般的函数是由调用者来负责清栈，用的是cdecl。 __rtld_lock_lock_recursive (GL(dl_load_lock));与__rtld_lock_unlock_recursive (GL(dl_load_lock));在现在还没有完全定义，至少在linux中是没有的，但可以参考在linux/kmod.c 中的request_module中为了防止过度嵌套而加的一个锁。
+
+而其它的内容就是一个封装了。
+
+dl_open_worker是真正做动态链接库映射并构造一个struct link_map而这是一个绝对重要的数据结构它的定义由于太长，我会放在第二篇文章结束的附录中介绍，因为那时你可以回头再理解动态链接库加载与解析的过程，而在下面的具体函数中出现了作实用性的解释，下面我们分段来看：
+
+
+_dl_open() >> dl_open_worker()
+2532 static void
+2533 dl_open_worker (void *a)
+2534 {
+……………………..
+2547 args->map = new = _dl_map_object (NULL, file, 0, lt_loaded, 0, mode);
+
+这里就是调用_dl_map_object 来把文件映射到内存中。原来的函数要从不同的路径搜索动态链接库文件，还要与SONAME（这是动态链接库文件在运行时的别名）比较，这些内容我在这里都删除了。
+
+
+_dl_open() >> dl_open_worker() >> _dl_map_object()
+1693 struct link_map *
+1694 internal_function
+1695 _dl_map_object (struct link_map *loader, const char *name, int preloaded,
+1696    int type, int trace_mode, int mode)
+1697 {
+1698   int fd;
+1699   char *realname;
+1700   char *name_copy;
+1701   struct link_map *l;
+1702   struct filebuf fb;
+1703
+1704
+1705   /* Look for this name among those already loaded. */
+1706   for (l = GL(dl_loaded); l; l = l->l_next)
+1707   {
+1708        if (!_dl_name_match_p (name, l))
+…………….
+1721        return l;
+1722   }
+1723
+1724    fd = open_path (name, namelen, preloaded, &env_path_list,
+1725     &realname, &fb);
+1726
+1727    l = _dl_new_object (name_copy, name, type, loader);
+1728
+1729    return _dl_map_object_from_fd (name, fd, &fb, realname, loader, type, mode);
+1730
+1731
+1732 }/*end of _dl_map_object*/
+
+这里先在已经被加载的一个动态链接库的链中搜索，在1706与1721行中就是作这一件事。想起来也很简单，因为可能在一个可执行文件依赖好几个动态链接库。而其中有几个动态链接库或许都依赖于同一个动态链接文件，可能早就加载了这样一个动态链接库，就是这样的情况了。
+
+下面open_path是一个关键，这里要指出的是env_path_list得到的方式有几种，一是在系统环境变量，二就是DT_RUNPATH 所指的节中的字符串（参见下面的附录），还有更复杂的，是从其它要加载这个动态链接库文件的动态链接库中得到的环境变量-------这些问题我们都不说明了。
+
+
+    _dl_open() >> dl_open_worker() >> _dl_map_object() >> open_path()
+1289 static int open_path (const char *name, size_t namelen, int preloaded,
+1290     struct r_search_path_struct *sps, char **realname,
+1291     struct filebuf *fbp)
+1292
+1293 {
+1294   struct r_search_path_elem **dirs = sps->dirs;
+1295   char *buf;
+1296   int fd = -1;
+1297   const char *current_what = NULL;
+1298   int any = 0;
+1299
+1300   buf = alloca (max_dirnamelen + max_capstrlen + namelen);
+1301
+1302   do
+1303     {
+1304       struct r_search_path_elem *this_dir = *dirs;
+1305       size_t buflen = 0;
+………………
+1310      struct stat64 st;
+1311     
+1312
+1313       edp = (char *) __mempcpy (buf, this_dir->dirname, this_dir->dirnamelen);
+1314       for (cnt = 0; fd == -1 && cnt < ncapstr; ++cnt)
+1315   {
+1316    /* Skip this directory if we know it does not exist. */
+1317    if (this_dir->status[cnt] == nonexisting)
+1318      continue;
+1319
+1320    buflen = ((char *) __mempcpy (__mempcpy (edp, capstr[cnt].str,
+1321          capstr[cnt].len), name, namelen)- buf);
+1322
+1323  
+1324    fd = open_verify (buf, fbp);
+1325        
+1326        
+1327    __xstat64 (_STAT_VER, buf, &st);
+1328   
+1329  
+1341   }
+1342
+…………….
+    1358   }
+
+在这上面的alloc是在栈上分配空间的函数，这样就不用担心在函数结束的时候出现内存泄漏的情况（好的程序员真的要对内存的分配熟谙于心）。 1313行就是把r_search_path_elem的dirname copy过来，而在1320至1321行的内容就是为这个路径加上最后的'/'路径分隔号，而capstr就是根据不同的操作系统与体系得到的路径分隔号。这其实是一个很好的例子，因为__memcpy返回的参数是dest string所copy的最后的一个字节的地址，所以每copy之后就会得到新的地址，如果用strncpy来写的话，就要用这样的方法
+
+
+strncpy(edp, capstr[cnt].str, capstr[cnt].len);
+edp+=capstr[cnt].len;
+strncpy(edp,name, namelen);
+edp+=namelen;
+buflen=edp-buf;
+
+这就要用四句，而这里用了一句就可以了。
+
+下面的open_verify是打开这个buf所指的文件名，fbp是从这个文件得到的文件开时1024字节的内容,并对文件的有效性进行检查，这里最主要的是ELF_IMAGIC核对。如果成功，就返回一个大于-1的文件描述符。整个open_path就这样完成了打开文件的方法。
+
+_dl_new_object是一个分配struct link_map* 数据结构并填充一些最基本的参数。
+
+
+_dl_open() >> dl_open_worker() >> _dl_map_object() >> _dl_new_object()
+2027 struct link_map *
+2028 internal_function
+2029 _dl_new_object (char *realname, const char *libname, int type,
+2030    struct link_map *loader)
+2031
+2032 {
+2033   struct link_map *l;
+2034   int idx;
+2035   size_t libname_len = strlen (libname) + 1;
+2036   struct link_map *new;
+2037   struct libname_list *newname;
+2038
+2039    new = (struct link_map *) calloc (sizeof (*new) + sizeof (*newname)
+2040         + libname_len, 1);
+2041
+………………..
+2046
+2047   new->l_name = realname;
+2048   new->l_type = type;
+2049   new->l_loader = loader;
+2050
+2051   new->l_scope = new->l_scope_mem;
+2052   new->l_scope_max = sizeof (new->l_scope_mem) / sizeof (new->l_scope_mem[0]);
+2053
+2054 if (GL(dl_loaded) != NULL)
+2055     {
+2056       l = GL(dl_loaded);
+2057       while (l->l_next != NULL)
+2058   l = l->l_next;
+2059       new->l_prev = l;
+2060       /* new->l_next = NULL; Would be necessary but we use calloc. */
+2061       l->l_next = new;
+2062
+2063       /* Add the global scope. */
+2064       new->l_scope[idx++] = &GL(dl_loaded)->l_searchlist;
+2065     }
+2066   else
+2067     GL(dl_loaded) = new;
+2068   ++GL(dl_nloaded);
+………….
+2080
+2081     return new;
+2082
+2083 }
+
+在2039行的内存分配是一个把libname 与name的数据结构也一同分配，是一种零用整取的策略。从2043-2053行都是为struct link_map 的成员数据赋值。从2054-2067行则是把新的struct link_map* 加入到一个单链中，这是在以后是很有用的，因为这样在一个执行文件中如果要整体管理它相关的动态链接库，就可以以单链遍历。
+
+如果要加载的动态链接库还没有被映射到进程的虚拟内存空间的话，那只是准备工作，真正的要点在_dl_map_object_from_fd()这个函数开始的。因为这之后，每一步都有关动态链接库在进程中发挥它的作用而必须的条件。
+
+这上段比较长，所以分段来看，
+
+
+_dl_open() >> dl_open_worker() >> _dl_map_object() >> _dl_map_from_fd()
+1391 struct link_map *
+1392 _dl_map_object_from_fd (const char *name, int fd, struct filebuf *fbp,
+1393     char *realname, struct link_map *loader, int l_type,
+1394     int mode)
+1395
+1396 {
+1397
+1398   struct link_map *l = NULL;
+1399   const ElfW(Ehdr) *header;
+1400   const ElfW(Phdr) *phdr;
+1401   const ElfW(Phdr) *ph;
+1402   size_t maplength;
+1403   int type;
+1404   struct stat64 st;
+1405
+1406   __fxstat64 (_STAT_VER, fd, &st);
+…………
+1413   for (l = GL(dl_loaded); l; l = l->l_next)
+1414     if (l->l_ino == st.st_ino && l->l_dev == st.st_dev)
+1415       {
+……….
+1418   __close (fd);
+……………
+1422   free (realname);
+1423   add_name_to_object (l, name);
+1424
+1425   return l;
+1426 }
+
+这里先开始就要从再找一遍，如果找到了已经有的struct link_map* 要加载的libname（的而比较的依据是它的与st_ino，这是物理文件在内存中编号，且文件的设备号st_dev相同，这是从比较底层来比较文件，具体的原因，你可以参看我将要发表的《从linux的内存管理看文件共享的实现》）。之所以采取这样再查一遍，因为如果进程从要开始打开动态链接库文件，走到这里可能要经过很长的时间（据我作的实验来看，对第一次打开的文件大概也就在200毫秒左右---------主要的时间是硬盘的寻道与读盘，但这对于计算机的进程而言已经是很长的时间了。）所以，有可能别的线程已经读入了这个动态链接库，这样就没有必要再做下去了。这与内核在文件的打开文件所用的思想是一致的。
+
+
+_dl_open() >> dl_open_worker() >> _dl_map_object() >> _dl_map_from_fd()
+1427
+1428   /* This is the ELF header. We read it in `open_verify'. */
+1429   header = (void *) fbp->buf;
+1430
+1431   l->l_entry = header->e_entry;
+1432   type = header->e_type;
+1433   l->l_phnum = header->e_phnum;
+1434
+1435   maplength = header->e_phnum * sizeof (ElfW(Phdr));
+1436
+
+这一段所作的为下面的ELF文件的分节映射入内存做一点准备（要读写phdr的数组）。
+
+
+_dl_open() >> dl_open_worker() >> _dl_map_object() >> _dl_map_from_fd()
+1438      /* Scan the program header table, collecting its load commands. */
+1439     struct loadcmd
+1440       {
+1441   ElfW(Addr) mapstart, mapend, dataend, allocend;
+1442   off_t mapoff;
+1443   int prot;
+1444       } loadcmds[l->l_phnum], *c;
+1445 size_t nloadcmds = 0;
+
